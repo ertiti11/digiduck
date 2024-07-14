@@ -28,31 +28,28 @@ Ejemplo de uso:
 	Run: func(cmd *cobra.Command, args []string) {
 		file, err := filepath.Abs(args[0])
 		if err != nil {
-			log.Fatalf("error obteniendo la ruta absoluta del archivo: %v", err)
+			log.Fatalf("error getting the absolute path of the file: %v", err)
 		}
 
-		fmt.Println("Antes de codificar")
 		err = encode(file)
 		if err != nil {
 			color.Red(err.Error())
 			os.Exit(2)
 		}
-		fmt.Println("Después de codificar")
-
 		payload, err := getFile("war.bin")
 		if err != nil {
-			log.Fatalf("error al obtener el archivo war.bin: %v", err)
+			log.Fatalf("error getting war.bin file: %v", err)
 		}
 
 		digiscript := generateSource(payload, 2500, 1, 5000, true)
 		err = writeData(digiscript)
 		if err != nil {
-			log.Fatalf("error al escribir el script en sketch.ino: %v", err)
+			log.Fatalf("error writing the script in ducky.ino: %v", err)
 		}
 
 		err = os.Remove("war.bin")
 		if err != nil {
-			fmt.Println("No se pudo eliminar war.bin:", err)
+			fmt.Println("Could not delete binary file:", err)
 		}
 
 		compile()
@@ -137,13 +134,13 @@ void loop()
 func writeData(digiscript string) error {
 	f, err := os.Create("digiduck.ino")
 	if err != nil {
-		return fmt.Errorf("error creando el archivo digiduck.ino: %w", err)
+		return fmt.Errorf("error creating digiduck.ino file: %w", err)
 	}
 	defer f.Close()
 
 	_, err = f.WriteString(digiscript)
 	if err != nil {
-		return fmt.Errorf("error escribiendo en digiduck.ino: %w", err)
+		return fmt.Errorf("error creating digiduck.ino file: %w", err)
 	}
 	return nil
 }
@@ -151,26 +148,26 @@ func writeData(digiscript string) error {
 func getFile(filename string) ([]byte, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, fmt.Errorf("error abriendo el archivo %s: %w", filename, err)
+		return nil, fmt.Errorf("error opening the file %s: %w", filename, err)
 	}
 	defer file.Close()
 
 	stats, err := file.Stat()
 	if err != nil {
-		return nil, fmt.Errorf("error obteniendo información del archivo %s: %w", filename, err)
+		return nil, fmt.Errorf("error getting information from file %s: %w", filename, err)
 	}
 
 	bytes := make([]byte, stats.Size())
 	_, err = bufio.NewReader(file).Read(bytes)
 	if err != nil {
-		return nil, fmt.Errorf("error leyendo el archivo %s: %w", filename, err)
+		return nil, fmt.Errorf("error reading the file %s: %w", filename, err)
 	}
 
 	return bytes, nil
 }
 
 func compile() {
-	color.Yellow("Compilando...\n")
+	color.Yellow("Compiling...\n")
 
 	compile := exec.Command("./cmd/lib/arduino.exe", "compile", "-b", "digistump:avr:digispark-tiny")
 	// Captura el stderr del comando
@@ -183,16 +180,16 @@ func compile() {
 		// color.Red("Error al compilar el sketch")
 		os.Exit(1)
 	}
-	color.Green("Compilado correctamente\n")
-	color.Green("Tienes 60 segundos para conectar el dispositivo\n")
+	color.Green("Compiled correctly\n")
+	color.Green("You have 60 seconds to connect the device\n")
 
 	time.Sleep(2 * time.Second)
-	color.Green("Conecta el digispark a un puerto USB (tiempo restante 60 segundos...)\n")
+	color.Green("Connect the digispark to a USB port (remaining time 60 seconds...)\n")
 
 	upload := exec.Command("./cmd/lib/arduino.exe", "upload", "-b", "digistump:avr:digispark-tiny")
 	err = upload.Run()
 	if err != nil {
-		log.Fatalf("Error al subir el sketch: %v", err)
+		log.Fatalf("Error uploading the program: %v", err)
 	}
-	color.Green("Sketch subido correctamente\n")
+	color.Green("the program has been uploaded correctly\n")
 }
